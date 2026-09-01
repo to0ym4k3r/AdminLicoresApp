@@ -1,0 +1,32 @@
+# macOS
+.DS_Store
+
+# Xcode / Swift
+DerivedData/
+*.xcuserstate
+build/
+*.ipa
+*.app
+xcuserdata/
+*.xccheckout
+*.moved-aside
+
+# XcodeGen / generado (se regenera en CI con `xcodegen generate`)
+# Nota: subimos project.yml, NO el .xcodeproj generado
+AdminLicores.xcodeproj/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# CocoaPods
+Pods/
+
+# Node (solo si el prototipo web lo usara)
+node_modules/
+
+# Entorno / secretos
+.env
+*.p8
+*.cer
+*.mobileprovision

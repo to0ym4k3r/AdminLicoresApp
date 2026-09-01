@@ -1,0 +1,60 @@
+# Configuración para Codemagic CI/CD
+# Compila tu app iOS en un Mac en la nube (sin necesitar un Mac físico)
+# y te entrega el .ipa para instalarla en tu iPhone con Sideloadly.
+#
+# Cómo usarla:
+#   1. Sube este repositorio (con project.yml incluido) a GitHub.
+#   2. En codemagic.io, conecta tu repositorio.
+#   3. Ejecuta este workflow "build-and-export" y descarga el .ipa al final.
+#
+# NOTA de firma (signing):
+#   Con una Apple ID gratuita, Sideloadly firma el .ipa localmente al instalarlo,
+#   así que este workflow genera un .ipa SIN firma (build "no signing")
+#   que luego firmamos en el PC con Sideloadly. Esto evita necesitar
+#   un certificado de Apple Developer de pago.
+
+workflows:
+  build-and-export:
+    name: Build & Export IPA (para Sideloadly)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      xcode: latest
+    scripts:
+      # 1. Instalar XcodeGen (para regenerar el .xcodeproj con el modelo Vendedor)
+      - name: Instalar XcodeGen
+        script: |
+          brew install xcodegen || brew upgrade xcodegen
+      # 2. Regenerar el proyecto (incluye Vendedor.swift y todo el código)
+      - name: Regenerar proyecto con XcodeGen
+        script: |
+          cd "$CM_BUILD_DIR"
+          xcodegen generate
+      # 3. Compilar la app SIN firma (build para dispositivos físicos, "generic iOS device")
+      #    Esto produce el app que Sideloadly firmará luego con tu Apple ID.
+      - name: Compilar app (sin firma de Apple Developer)
+        script: |
+          cd "$CM_BUILD_DIR"
+          xcodebuild \
+            -project AdminLicores.xcodeproj \
+            -scheme AdminLicores \
+            -configuration Debug \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+      # 4. Empaquetar en .ipa (sin firma) listo para Sideloadly
+      - name: Crear archivo .ipa
+        script: |
+          cd "$CM_BUILD_DIR"
+          APP_PATH=$(find build -path "*Build/Products/Debug-iphoneos/AdminLicores.app" | head -1)
+          echo "APP_PATH=$APP_PATH"
+          mkdir -p ipa/Payload
+          cp -R "$APP_PATH" ipa/Payload/
+          cd ipa
+          zip -r ../AdminLicores-sideload.ipa Payload
+          cd ..
+          echo "IPA listo:"
+          ls -la AdminLicores-sideload.ipa
+    artifacts:
+      - AdminLicores-sideload.ipa
