@@ -9,8 +9,8 @@ final class AppViewModel: ObservableObject {
     @Published private(set) var store: AppStore
     private let scheduler = NotificationScheduler.shared
 
-    init(store: AppStore = AppStore()) {
-        self.store = store
+    init(store: AppStore? = nil) {
+        self.store = store ?? AppStore()
     }
 
     // MARK: - Recordatorios
