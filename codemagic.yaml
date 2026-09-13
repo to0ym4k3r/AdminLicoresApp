@@ -58,3 +58,14 @@ workflows:
           ls -la AdminLicores-sideload.ipa
     artifacts:
       - AdminLicores-sideload.ipa
+
+# Disparo automático: cada push a master compila solo.
+# (Sin esta sección, Codemagic solo compilaba al lanzar builds manualmente,
+#  por eso un push podía quedar sin build y el IPA viejo seguía vigente.)
+triggering:
+  events:
+    - push
+  branch_patterns:
+    - pattern: master
+      include: true
+      source: push
