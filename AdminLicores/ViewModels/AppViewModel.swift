@@ -169,6 +169,21 @@ final class AppViewModel: ObservableObject {
                                                  fechaLimite: fechaLimite))
     }
 
+    /// Crea un pendiente del CEO desde un dictado por voz. El texto completo se
+    /// guarda como descripción y un fragmento inicial como título. La fecha
+    /// detectada futura se usa como fecha límite.
+    func agregarPedidoPorVoz(texto: String, fechaLimite: Date?) {
+        let limpio = texto.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !limpio.isEmpty else { return }
+        let titulo = String(limpio.prefix(48))
+        let limite = fechaLimite ?? nil
+        store.pedidos.insert(PedidoRequerimiento(titulo: titulo,
+                                                 descripcion: limpio,
+                                                 prioridad: .media,
+                                                 fechaLimite: (limite != nil && limite! > Date()) ? limite : nil),
+                             at: 0)
+    }
+
     func alternarCompletado(_ pedido: PedidoRequerimiento) {
         guard let idx = store.pedidos.firstIndex(where: { $0.id == pedido.id }) else { return }
         store.pedidos[idx].estaCompletado.toggle()

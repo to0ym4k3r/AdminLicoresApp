@@ -4,6 +4,7 @@ import SwiftUI
 struct PedidosView: View {
     @EnvironmentObject private var viewModel: AppViewModel
     @State private var mostrarNuevo = false
+    @State private var mostrarVoz = false
     @State private var mostrarUndo = false
     @State private var undoRem = 3
     @State private var undoTimer: Timer?
@@ -33,7 +34,14 @@ struct PedidosView: View {
             }
             .navigationTitle("CEO")
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        mostrarVoz = true
+                    } label: {
+                        Image(systemName: "mic.fill")
+                    }
+                    .tint(AppColor.ceo)
+
                     Button {
                         mostrarNuevo = true
                     } label: {
@@ -43,6 +51,9 @@ struct PedidosView: View {
             }
             .sheet(isPresented: $mostrarNuevo) {
                 NuevoPedidoSheet()
+            }
+            .sheet(isPresented: $mostrarVoz) {
+                PedidoVozSheet()
             }
         }
     }
