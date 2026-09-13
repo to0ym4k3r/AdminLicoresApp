@@ -5,6 +5,7 @@ struct CardRecordatorio: View {
     @EnvironmentObject private var viewModel: AppViewModel
     let rec: Recordatorio
     let onToggle: () -> Void
+    let onEditar: () -> Void
 
     var body: some View {
         TarjetaGlass(tint: Color(hex: rec.etiquetaColor).opacity(0.5)) {
@@ -70,5 +71,7 @@ struct CardRecordatorio: View {
                 .accessibilityLabel(rec.estaActivado ? "Apagar \(rec.titulo)" : "Encender \(rec.titulo)")
             }
         }
+        .contentShape(Rectangle())
+        .onTapGesture { onEditar() }
     }
 }

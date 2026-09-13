@@ -42,6 +42,13 @@ final class AppViewModel: ObservableObject {
         Task { await scheduler.programar(r) }
     }
 
+    /// Replaces an existing reminder (same id) and reprograms its notifications.
+    func actualizar(_ recordatorio: Recordatorio) {
+        guard let idx = store.recordatorios.firstIndex(where: { $0.id == recordatorio.id }) else { return }
+        store.recordatorios[idx] = recordatorio
+        Task { await scheduler.programar(recordatorio) }
+    }
+
     func horaProxima(recordatorio: Recordatorio) -> Date? {
         let cal = Calendar.current
         let hoy = Date()

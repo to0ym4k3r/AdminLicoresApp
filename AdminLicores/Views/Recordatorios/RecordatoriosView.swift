@@ -4,6 +4,7 @@ import SwiftUI
 struct RecordatoriosView: View {
     @EnvironmentObject private var viewModel: AppViewModel
     @State private var mostrarVoz = false
+    @State private var recordatorioParaEditar: Recordatorio?
 
     var body: some View {
         NavigationStack {
@@ -24,6 +25,9 @@ struct RecordatoriosView: View {
             .navigationTitle("Hoy")
             .sheet(isPresented: $mostrarVoz) {
                 VozNotaSheet()
+            }
+            .sheet(item: $recordatorioParaEditar) { rec in
+                EditarRecordatorioSheet(rec: rec)
             }
         }
     }
@@ -138,9 +142,9 @@ struct RecordatoriosView: View {
                           color: AppColor.lavanda)
 
             ForEach(viewModel.recordatoriosOrdenados) { rec in
-                CardRecordatorio(rec: rec) {
-                    viewModel.alternar(rec)
-                }
+                CardRecordatorio(rec: rec,
+                                 onToggle: { viewModel.alternar(rec) },
+                                 onEditar: { recordatorioParaEditar = rec })
             }
         }
     }
