@@ -4,6 +4,7 @@ import SwiftUI
 struct GestionRecordatoriosView: View {
     @EnvironmentObject private var viewModel: AppViewModel
     @State private var mostrarNuevo = false
+    @State private var recordatorioParaEditar: Recordatorio?
 
     var body: some View {
         ZStack {
@@ -28,6 +29,9 @@ struct GestionRecordatoriosView: View {
         .sheet(isPresented: $mostrarNuevo) {
             NuevoRecordatorioSheet()
         }
+        .sheet(item: $recordatorioParaEditar) { rec in
+            EditarRecordatorioSheet(rec: rec)
+        }
     }
 
     private var explicacion: some View {
@@ -42,9 +46,9 @@ struct GestionRecordatoriosView: View {
         VStack(alignment: .leading, spacing: 12) {
             ForEach(viewModel.recordatoriosOrdenados) { rec in
                 HStack {
-                    CardRecordatorio(rec: rec) {
-                        viewModel.alternar(rec)
-                    }
+                    CardRecordatorio(rec: rec,
+                                     onToggle: { viewModel.alternar(rec) },
+                                     onEditar: { recordatorioParaEditar = rec })
                     if rec.tipo == .personalizado {
                         Button(role: .destructive) {
                             Task { await NotificationScheduler.shared.cancelar(rec) }
