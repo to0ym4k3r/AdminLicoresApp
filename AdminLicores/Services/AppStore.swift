@@ -29,11 +29,14 @@ final class AppStore: ObservableObject {
     @Published var vendedores: [Vendedor] = [] {
         didSet { guardar() }
     }
+    @Published var notas: [NotaVoz] = [] {
+        didSet { guardar() }
+    }
 
     // MARK: - Persistencia
     private let defaults = UserDefaults.standard
     private enum Key: String {
-        case recordatorios, miembros, consumos, productos, pedidos, proveedores, vendedores
+        case recordatorios, miembros, consumos, productos, pedidos, proveedores, vendedores, notas
     }
 
     init() {
@@ -52,6 +55,7 @@ final class AppStore: ObservableObject {
         pedidos = load([PedidoRequerimiento].self, for: .pedidos) ?? []
         proveedores = load([String].self, for: .proveedores) ?? []
         vendedores = load([Vendedor].self, for: .vendedores) ?? []
+        notas = load([NotaVoz].self, for: .notas) ?? []
     }
 
     private func load<T: Decodable>(_ type: T.Type, for key: Key) -> T? {
@@ -67,6 +71,7 @@ final class AppStore: ObservableObject {
         save(pedidos, for: .pedidos)
         save(proveedores, for: .proveedores)
         save(vendedores, for: .vendedores)
+        save(notas, for: .notas)
     }
 
     private func save<T: Encodable>(_ value: T, for key: Key) {

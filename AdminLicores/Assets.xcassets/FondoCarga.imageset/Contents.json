@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "fondo-carga.jpg",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

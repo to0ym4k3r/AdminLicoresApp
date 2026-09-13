@@ -32,6 +32,8 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        NSSpeechRecognitionUsageDescription: Esta app usa reconocimiento de voz para crear notas y recordatorios dictados.
+        NSMicrophoneUsageDescription: Esta app usa el micrófono para grabar tus notas por voz.
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UIUserInterfaceStyle: Light

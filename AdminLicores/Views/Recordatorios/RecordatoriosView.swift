@@ -3,6 +3,7 @@ import SwiftUI
 /// Pantalla principal: saludo, recordatorios de hoy y listado programado.
 struct RecordatoriosView: View {
     @EnvironmentObject private var viewModel: AppViewModel
+    @State private var mostrarVoz = false
 
     var body: some View {
         NavigationStack {
@@ -12,6 +13,7 @@ struct RecordatoriosView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         header
                         resumenHoy
+                        notaVoz
                         listaProgramada
                     }
                     .padding(.horizontal, 20)
@@ -20,6 +22,9 @@ struct RecordatoriosView: View {
                 }
             }
             .navigationTitle("Hoy")
+            .sheet(isPresented: $mostrarVoz) {
+                VozNotaSheet()
+            }
         }
     }
 
@@ -70,6 +75,62 @@ struct RecordatoriosView: View {
         }
     }
 
+    private var notaVoz: some View {
+        let notas = viewModel.store.notas.sorted { $0.fechaRegistro > $1.fechaRegistro }
+        return VStack(alignment: .leading, spacing: 14) {
+            TituloSeccion(titulo: "Notas por voz",
+                          subtitulo: "Dicta una nota y crea tu propia alarma",
+                          color: AppColor.rosaSuave)
+
+            Button {
+                mostrarVoz = true
+            } label: {
+                HStack(spacing: 14) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(AppColor.rosaSuave.opacity(0.5))
+                            .frame(width: 42, height: 42)
+                        Image(systemName: "mic.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(AppColor.rosaPrincipal)
+                    }
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Grabar nota por voz")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundColor(AppColor.textoPrincipal)
+                        Text("Detecta fechas y horas automáticamente")
+                            .font(.system(size: 12, design: .rounded))
+                            .foregroundColor(AppColor.textoSecundario)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(AppColor.textoSecundario.opacity(0.6))
+                }
+                .padding(16)
+                .glassCard(tint: AppColor.rosaSuave.opacity(0.4))
+                .foregroundColor(AppColor.textoPrincipal)
+            }
+            .buttonStyle(.plain)
+
+            if notas.isEmpty {
+                TarjetaGlass(tint: AppColor.rosaSuave.opacity(0.35)) {
+                    Text("Dicta una nota y la app creará la alarma por vos. ✨")
+                        .font(.system(size: 14, design: .rounded))
+                        .foregroundColor(AppColor.textoSecundario)
+                }
+            } else {
+                ForEach(notas) { nota in
+                    CardNotaVoz(nota: nota) {
+                        withAnimation {
+                            viewModel.eliminarNotaVoz(nota)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private var listaProgramada: some View {
         VStack(alignment: .leading, spacing: 14) {
             TituloSeccion(titulo: "Recordatorios programados",
@@ -82,6 +143,62 @@ struct RecordatoriosView: View {
                 }
             }
         }
+    }
+}
+
+/// Tarjeta de una nota por voz guardada
+private struct CardNotaVoz: View {
+    let nota: NotaVoz
+    let onEliminar: () -> Void
+
+    var body: some View {
+        TarjetaGlass(tint: AppColor.rosaSuave.opacity(0.35)) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "waveform")
+                    .font(.title3)
+                    .foregroundColor(AppColor.rosaPrincipal)
+                    .frame(width: 30)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(nota.texto)
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundColor(AppColor.textoPrincipal)
+                        .lineLimit(2)
+
+                    HStack(spacing: 8) {
+                        if let fecha = nota.fechaDetectada {
+                            Label("Alarma \(formatoCorto(fecha))", systemImage: "alarm.fill")
+                                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                .foregroundColor(AppColor.rosaPrincipal)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(AppColor.rosaSuave.opacity(0.5))
+                                .clipShape(Capsule())
+                        }
+                        Label("Registrada \(formatoCorto(nota.fechaRegistro))", systemImage: "clock")
+                            .font(.system(size: 11, design: .rounded))
+                            .foregroundColor(AppColor.textoSecundario)
+                    }
+                }
+
+                Spacer()
+
+                Button(action: onEliminar) {
+                    Image(systemName: "trash")
+                        .font(.caption)
+                        .foregroundColor(AppColor.textoSecundario.opacity(0.6))
+                }
+                .buttonStyle(.borderless)
+                .padding(.top, 2)
+            }
+        }
+    }
+
+    private func formatoCorto(_ fecha: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "es_PE")
+        f.dateFormat = "dd/MM HH:mm"
+        return f.string(from: fecha)
     }
 }
 

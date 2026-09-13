@@ -22,6 +22,10 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Esta app usa reconocimiento de voz para crear notas y recordatorios dictados.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Esta app usa el micrófono para grabar tus notas por voz.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

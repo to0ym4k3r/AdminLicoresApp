@@ -77,6 +77,29 @@ final class NotificationScheduler {
         }
     }
 
+    /// Programa una notificación local única para una fecha determinada.
+    /// Se usa para las alarmas de las notas por voz.
+    func programarUnaVez(fecha: Date, titulo: String, cuerpo: String, id: String) async {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [id])
+
+        let contenido = UNMutableNotificationContent()
+        contenido.title = titulo
+        contenido.body = cuerpo
+        contenido.sound = .default
+
+        let comp = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: fecha)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: comp, repeats: false)
+        let request = UNNotificationRequest(identifier: id, content: contenido, trigger: trigger)
+        try? await center.add(request)
+    }
+
+    /// Cancela una notificación local por su identificador (overload genérico,
+    /// no rompe la firma existente que recibe un Recordatorio).
+    func cancelar(id: String) async {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [id])
+    }
+
     func reprogramarTodos(_ recordatorios: [Recordatorio]) async {
         for r in recordatorios { await programar(r) }
     }

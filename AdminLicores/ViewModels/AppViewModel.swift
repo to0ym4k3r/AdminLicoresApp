@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 
 /// ViewModel global que orquesta la lógica de negocio y expone datos
 /// derivados a las vistas. Usa el AppStore como fuente de verdad persistida.
@@ -9,8 +10,17 @@ final class AppViewModel: ObservableObject {
     @Published private(set) var store: AppStore
     private let scheduler = NotificationScheduler.shared
 
+    /// Reenvía los cambios internos del store al ViewModel: las vistas están
+    /// suscritas a `viewModel.objectWillChange`, así que sin este puente las
+    /// mutaciones directas (toggle, tachos) no refrescan la UI.
+    private var storeCancellable: AnyCancellable?
+
     init(store: AppStore? = nil) {
         self.store = store ?? AppStore()
+        storeCancellable = self.store.objectWillChange
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
     }
 
     // MARK: - Recordatorios
@@ -175,6 +185,47 @@ final class AppViewModel: ObservableObject {
     /// Limpia la referencia al último pedido eliminado (al expirar el deshacer).
     func limpiarUltimoPedidoEliminado() {
         ultimoPedidoEliminado = nil
+    }
+
+    // MARK: - Notas por voz
+
+    /// Registra una nota dictada. Si hay fecha detectada en el futuro, programa
+    /// una alarma única (notificación local) y guarda su id para cancelarla.
+    func registrarNotaVoz(texto: String, fechaDetectada: Date?) {
+        let limpio = texto.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !limpio.isEmpty else { return }
+
+        var nota = NotaVoz(texto: limpio)
+        if let fecha = fechaDetectada, fecha > Date() {
+            let idNotif = nota.id.uuidString
+            nota.fechaDetectada = fecha
+            nota.notifID = idNotif
+            Task { await scheduler.programarUnaVez(fecha: fecha,
+                                                   titulo: "Recordatorio por voz",
+                                                   cuerpo: limpio,
+                                                   id: idNotif) }
+        }
+        // Fecha en pasado o ausente: la nota se guarda sin alarma.
+        store.notas.insert(nota, at: 0)
+    }
+
+    /// Elimina una nota por voz y cancela su notificación pendiente si existe.
+    func eliminarNotaVoz(_ nota: NotaVoz) {
+        if let idNotif = nota.notifID {
+            Task { await scheduler.cancelar(id: idNotif) }
+        }
+        store.notas.removeAll { $0.id == nota.id }
+    }
+
+    /// Devuelve la primera fecha futura razonable detectada en el texto
+    /// (o la primera detectada si ninguna está en el futuro).
+    func deteccionPara(_ texto: String) -> Date? {
+        let fechas = DetectorFecha.fechasEn(texto)
+        let horizonte = Date().addingTimeInterval(366 * 24 * 60 * 60)
+        if let futura = fechas.first(where: { $0 > Date() && $0 < horizonte }) {
+            return futura
+        }
+        return fechas.first
     }
 
     // MARK: - Formato moneda
